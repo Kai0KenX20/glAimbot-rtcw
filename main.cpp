@@ -173,93 +173,118 @@ void WINAPI newglVertexPointer(GLint size, GLenum type, GLsizei stride, const GL
 	//menu key
 	if (GetAsyncKeyState(VK_INSERT) & 1)
 	{
-		showmenu = !showmenu;
+void __stdcall newwglSwapBuffers(HDC hDC) // GDI32
+{
+    //get viewport
+    glGetIntegerv(GL_VIEWPORT, Viewport);
 
-		SaveSettings(); //save menu settings
-	}
+    //build font once
+    if (!bTextLoaded)
+    {
+        BuildFont(); //load font
+        LoadSettings(); //load menu values
+        bTextLoaded = true;
+    }
 
-	//draw menu
-	if (showmenu)
-	{
-		rendermenu();
-	}
+    if ((GetAsyncKeyState(VK_DELETE) < 0)) //buffer reload, if switch fullscreen/window deletes font buffer
+    {
+        BuildFont(); //load font
+    }
 
-	
-	//Shift|RMouse|LMouse|Ctrl|Alt|Space|X|C
-	if (aimkey == 1) Daimkey = VK_SHIFT;
-	if (aimkey == 2) Daimkey = VK_RBUTTON;
-	if (aimkey == 3) Daimkey = VK_LBUTTON;
-	if (aimkey == 4) Daimkey = VK_CONTROL;
-	if (aimkey == 5) Daimkey = VK_MENU;
-	if (aimkey == 6) Daimkey = VK_SPACE;
-	if (aimkey == 7) Daimkey = 0x58; //X
-	if (aimkey == 8) Daimkey = 0x43; //C
-	
-	//aimbot part 2
-	if (aimbot == 1|| aimbot == 2) //&& GetAsyncKeyState(aimkey)) //& 0x8000)
-	{
-		unsigned int pointNum = -1;
-		unsigned int i = 0;
-		float Closest = -0xFFFFFF;
-		float Closest2 = 0xFFFFFF;
-		float CenterX = (float)Viewport[2] / 2;
-		float CenterY = (float)Viewport[3] / 2;
+    //menu key
+    if (GetAsyncKeyState(VK_INSERT) & 1)
+    {
+        showmenu = !showmenu;
+        SaveSettings(); //save menu settings
+    }
 
-		for (i = 0; i<AimPoint.size(); i++)
-		{
-			//test
-			//drawMessage(AimPoint[i].x, AimPoint[i].y, 1.0, "Model");
-			//drawMessage(AimPoint[pointNum].x, AimPoint[pointNum].y, 0.8, "Iterations this frame: %d (1st %.2f %.2f %.2f)", AimPoint.size(), AimPoint[0].x, AimPoint[0].y, AimPoint[0].z);
+    //draw menu
+    if (showmenu)
+    {
+        rendermenu();
+    }
 
-			float xdif = CenterX - AimPoint[i].x;
-			float ydif = CenterY - AimPoint[i].y;
+    //Shift|RMouse|LMouse|Ctrl|Alt|Space|X|C
+    if (aimkey == 1) Daimkey = VK_SHIFT;
+    if (aimkey == 2) Daimkey = VK_RBUTTON;
+    if (aimkey == 3) Daimkey = VK_LBUTTON;
+    if (aimkey == 4) Daimkey = VK_CONTROL;
+    if (aimkey == 5) Daimkey = VK_MENU;
+    if (aimkey == 6) Daimkey = VK_SPACE;
+    if (aimkey == 7) Daimkey = 0x58; //X
+    if (aimkey == 8) Daimkey = 0x43; //C
 
-			float hyp = sqrt((xdif*xdif) + (ydif*ydif));
+    //aimbot part 2
+    if (aimbot == 1 || aimbot == 2)
+    {
+        unsigned int pointNum = -1;
+        unsigned int i = 0;
+        float Closest = -0xFFFFFF;
+        float Closest2 = 0xFFFFFF;
+        float CenterX = (float)Viewport[2] / 2;
+        float CenterY = (float)Viewport[3] / 2;
 
-			if (hyp < Closest2)
-			{
-				Closest2 = hyp;
-				pointNum = i;
-			}
-		}
+        for (i = 0; i < AimPoint.size(); i++)
+        {
+            float xdif = CenterX - AimPoint[i].x;
+            float ydif = CenterY - AimPoint[i].y;
+            float hyp = sqrt((xdif * xdif) + (ydif * ydif));
 
-		if (pointNum != -1)
-		{
-			//gl aim
-			if (aimmode == 1)
-			AimPoint[pointNum].y = Viewport[3] - AimPoint[pointNum].y; //inverted mouse
-			else
-			AimPoint[pointNum].y = AimPoint[pointNum].y; //normal mouse
+            if (hyp < Closest2)
+            {
+                Closest2 = hyp;
+                pointNum = i;
+            }
+        }
 
-			double DistX = (double)AimPoint[pointNum].x - CenterX;
-			double DistY = (double)AimPoint[pointNum].y - CenterY;
+        if (pointNum != -1)
+        {
+            if (aimmode == 1)
+                AimPoint[pointNum].y = Viewport[3] - AimPoint[pointNum].y; //inverted mouse
+            else
+                AimPoint[pointNum].y = AimPoint[pointNum].y; //normal mouse
 
-			//drawMessage(AimPoint[pointNum].x, AimPoint[pointNum].y, 1.0, "aiming at");
+            double DistX = (double)AimPoint[pointNum].x - CenterX;
+            double DistY = (double)AimPoint[pointNum].y - CenterY;
 
-			DistX /= aimsmooth;
-			DistY /= aimsmooth;
+            DistX /= aimsmooth;
+            DistY /= aimsmooth;
 
-			if (GetAsyncKeyState(Daimkey) & 0x8000)
-			{
-				if(aimsmooth == 0)
-				SetCursorPos((int)AimPoint[pointNum].x, (int)AimPoint[pointNum].y); //best accuracy for fullscreen
-				else
-				mouse_event(MOUSEEVENTF_MOVE, (DWORD)DistX, (DWORD)DistY, NULL, NULL);
-			}
+            if (GetAsyncKeyState(Daimkey) & 0x8000)
+            {
+                if (aimsmooth == 0)
+                    SetCursorPos((int)AimPoint[pointNum].x, (int)AimPoint[pointNum].y); //best accuracy for fullscreen
+                else
+                    mouse_event(MOUSEEVENTF_MOVE, (DWORD)DistX, (DWORD)DistY, NULL, NULL);
+            }
 
-			//autoshoot on
-			if (!GetAsyncKeyState(VK_LBUTTON)) //manual override, if player attacks manually don't interfere
-			//return;
-			if (autoshoot == 1 && GetAsyncKeyState(Daimkey) & 0x8000)
-			{
-				if (!IsPressed)
-				{
-					IsPressed = true;
-					mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-				}
-			}
+            if (!GetAsyncKeyState(VK_LBUTTON)) //manual override, if player attacks manually don't interfere
+                if (autoshoot == 1 && GetAsyncKeyState(Daimkey) & 0x8000)
+                {
+                    if (!IsPressed)
+                    {
+                        IsPressed = true;
+                        mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    }
+                }
+        }
+    }
 
-		}
+    AimPoint.clear();
+
+    if (autoshoot == 1 && IsPressed)
+    {
+        if (timeGetTime() - gametick > asdelay)
+        {
+            IsPressed = false;
+            mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            gametick = timeGetTime();
+        }
+    }
+
+    origwglSwapBuffers(hDC);
+}
+
 	}
 
 	AimPoint.clear();
