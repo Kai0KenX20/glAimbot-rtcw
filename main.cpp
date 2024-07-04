@@ -152,22 +152,23 @@ void WINAPI newglDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
 // =============================================================================================== //
 
 void __stdcall newwglSwapBuffers(HDC hDC) // GDI32
+void WINAPI newglVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
-	//get viewport
-	glGetIntegerv(GL_VIEWPORT, Viewport);
+    //used for walls check, not used anymore for dead body check
+    if (pointer != NULL)
+    {
+        vpointer = (GLfloat *)pointer;
 
-	//build font once
-	if (!bTextLoaded)
-	{
-		BuildFont(); //load font
-		LoadSettings(); //load menu values
-		bTextLoaded = true;
-	}
+        GLfloat *x = (GLfloat *)vpointer + 0;
+        GLfloat *y = (GLfloat *)vpointer + 1;
+        GLfloat *z = (GLfloat *)vpointer + 2;
+        Xe = *x;
+        Ye = *y;
+        Ze = *z;
+    }
 
-	if ((GetAsyncKeyState(VK_DELETE) < 0))//buffer reload, if switch fullscreen/window deletes font buffer
-	{
-		BuildFont(); //load font
-	}
+    origglVertexPointer(size, type, stride, pointer);
+}
 
 	//menu key
 	if (GetAsyncKeyState(VK_INSERT) & 1)
