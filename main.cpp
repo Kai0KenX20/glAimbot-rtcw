@@ -17,54 +17,44 @@
 
 void WINAPI newglBindTexture(GLenum target, GLuint texture)
 {
-	//get shader
-	//Shader = *((char **)0x016BB418); //mov     eax, dword_16BB418
+    __asm mov Shader, esi
+    if (Shader > 0x1000 && texture != NULL && Shader != NULL)
+        shaderfound = true;
+    else shaderfound = false;
 
-	//get shader
-	__asm mov Shader, esi
-	if (Shader > 0x1000 && texture != NULL && Shader != NULL)
-		shaderfound = true;
-	else shaderfound = false;
+    //model rec
+    if (shaderfound)
+    {
+        //all axis models
+        if (strstr((char*)Shader, "models/players/multi_axis"))
+            allaxis = true;
+        else allaxis = false;
 
+        //all allies models
+        if (strstr((char*)Shader, "models/players/multi"))
+            allallies = true;
+        else allallies = false;
 
-	//model rec
-	if (shaderfound)
-	{
-		//all axis models
-		if (
-			(strstr((char*)Shader, "models/players/multi_axis"))
-			)
-			allaxis = true;
-		else allaxis = false;
+        //axis heads
+        if (strstr((char*)Shader, "models/players/multi_axis/head_german"))
+            axis_head = true;
+        else axis_head = false;
 
-		//all allies models
-		if (
-			(strstr((char*)Shader, "models/players/multi"))
-			)
-			allallies = true;
-		else allallies = false;
+        //allies heads
+        if (strstr((char*)Shader, "models/players/multi/head_american") || strstr((char*)Shader, "models/players/multi/head_american_3"))
+            allies_head = true;
+        else allies_head = false;
+    }
 
-		//axis heads
-		if (strstr((char*)Shader, "models/players/multi_axis/head_german"))
-			axis_head = true;
-		else axis_head = false;
+    //log shader names
+    if (GetAsyncKeyState(VK_F10) < 0)
+        if (texture != NULL && Shader != NULL)
+            if (strstr((char*)Shader, "models"))
+                Log("Shader == %s\r", Shader);
 
-		//allies heads
-		if (
-			(strstr((char*)Shader, "models/players/multi/head_american")) ||
-			(strstr((char*)Shader, "models/players/multi/head_american_3"))
-			)
-			allies_head = true;
-		else allies_head = false;
-	}
+    (*origglBindTexture)(target, texture);
+}
 
-	//log shader names
-	if (GetAsyncKeyState(VK_F10) < 0)
-	if (texture != NULL && Shader != NULL)
-	if (strstr((char*)Shader, "models"))
-	Log("Shader == %s\r", Shader);
-
-	(*origglBindTexture)(target, texture);
 }
 
 // =============================================================================================== //
