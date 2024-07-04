@@ -1,6 +1,6 @@
 //#######################################################################
 //
-// GL hook 2003
+// GL hook updated for Wolfenstein: Enemy Territory 2.6b
 //
 // credits: Pansemuckl, Rainerstoff, Sinner, game-deception 
 //
@@ -8,6 +8,7 @@
 // seta r_primitives 2 is required for glDrawElements to work!
 // Primitives have an influence on how ET renders its graphics. 0 = auto select, 1 = single gldrawelements, 2 = multiple gldrawelements.
 //
+//#######################################################################
 //#######################################################################
 
 #include "main.h" //tools here
