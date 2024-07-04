@@ -70,84 +70,72 @@ void WINAPI newglDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
 	if (
 		(aimbot == 1 && IsDead() == false && axis_head) ||		//aim at axis head
 		(aimbot == 2 && IsDead() == false && allies_head)		//aim at allies head
-		)
-	{
-		//tweak
-		//glTranslatef(0,0,1);
+void WINAPI newglDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices)
+{
+    //aimbot part 1
+    if ((aimbot == 1 && IsDead() == false && axis_head) || (aimbot == 2 && IsDead() == false && allies_head))
+    {
+        glGetFloatv(GL_MODELVIEW_MATRIX, MViewMX);
+        glGetFloatv(GL_PROJECTION_MATRIX, ProjMX);
 
-		glGetFloatv(GL_MODELVIEW_MATRIX, MViewMX);
-		glGetFloatv(GL_PROJECTION_MATRIX, ProjMX);
+        //if not behind walls
+        GetLargestVertexFromArray(2, count, 16, indices, vpointer, Window);
+        if ((IsVertexVisible(Window)) || (IsPointVisible(Window[0] + 0, Window[1] + 0, Window[2] + 5) || IsPointVisible(Window[0] + 10, Window[1] + 10, Window[2] + 5) || IsPointVisible(Window[0] + 10, Window[1] - 10, Window[2] + 5) || IsPointVisible(Window[0] - 10, Window[1] - 10, Window[2] - 30) || IsPointVisible(Window[0] + 10, Window[1] - 10, Window[2] - 30) || IsPointVisible(Window[0] + 10, Window[1] + 10, Window[2] - 55) || IsPointVisible(Window[0] - 10, Window[1] + 10, Window[2] - 55)))
+        {
+            ObjectToWindowAim(MViewMX, ProjMX, Viewport, Window); //w2s
 
-		//if not behind walls
-		GetLargestVertexFromArray(2, count, 16, indices, vpointer, Window);
-		if ((IsVertexVisible(Window)) || (IsPointVisible(Window[0] + 0, Window[1] + 0, Window[2] + 5) || IsPointVisible(Window[0] + 10, Window[1] + 10, Window[2] + 5) || IsPointVisible(Window[0] + 10, Window[1] - 10, Window[2] + 5) || IsPointVisible(Window[0] - 10, Window[1] - 10, Window[2] - 30) || IsPointVisible(Window[0] + 10, Window[1] - 10, Window[2] - 30) || IsPointVisible(Window[0] + 10, Window[1] + 10, Window[2] - 55) || IsPointVisible(Window[0] - 10, Window[1] + 10, Window[2] - 55)))
-		{
-			ObjectToWindowAim(MViewMX, ProjMX, Viewport, Window); //w2s
+            float ScrCenter[3];
+            ScrCenter[0] = float(Viewport[2] / 2);
+            ScrCenter[1] = float(Viewport[3] / 2);
+            ScrCenter[2] = 0.0f;
 
-			//test
-			//if (esp == 1 && all_heads)
-			//DrawESP(1, MViewMX, ProjMX, Window);
+            float radiusx = aimfov * (ScrCenter[0] / 100);
+            float radiusy = aimfov * (ScrCenter[1] / 100);
 
-			float ScrCenter[3];
-			ScrCenter[0] = float(Viewport[2] / 2);
-			ScrCenter[1] = float(Viewport[3] / 2);
-			ScrCenter[2] = 0.0f;
+            //aimfov
+            if (Window[0] >= (ScrCenter[0] - radiusx) && Window[0] <= (ScrCenter[0] + radiusx) && Window[1] >= (ScrCenter[1] - radiusy) && Window[1] <= (ScrCenter[1] + radiusy))
+            {
+                tPointf p = { Window[0], Window[1], MViewMX[14] };
+                AimPoint.push_back(p);
+            }
+        }
+    }
 
-			float radiusx = aimfov * (ScrCenter[0] / 100);
-			float radiusy = aimfov * (ScrCenter[1] / 100);
+    //wallhack
+    if ((wallhack == 1) && (allaxis || allallies))
+    {
+        glDisable(GL_DEPTH_TEST);
+        origglDrawElements(mode, count, type, indices);
+        glEnable(GL_DEPTH_TEST);
+    }
 
-			//aimfov
-			if (Window[0] >= (ScrCenter[0] - radiusx) && Window[0] <= (ScrCenter[0] + radiusx) && Window[1] >= (ScrCenter[1] - radiusy) && Window[1] <= (ScrCenter[1] + radiusy))
-			{
-				tPointf p = { Window[0], Window[1], MViewMX[14] };
-				AimPoint.push_back(p);
-			}
+    //chams, normal
+    if ((chams == 1) && (allaxis || allallies))
+    {
+        glPushMatrix();
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_TEXTURE_2D);
+        glEnable(GL_COLOR_MATERIAL);
+        glDisableClientState(GL_COLOR_ARRAY);
+        if (allaxis)
+            glColor4ub(255, 80, 0, 0); //behind walls
+        else if (allallies)
+            glColor4ub(0, 255, 125, 0); //behind walls
+        origglDrawElements(mode, count, type, indices);
+        glEnable(GL_COLOR_MATERIAL);
+        glDisableClientState(GL_COLOR_ARRAY);
+        if (allaxis)
+            glColor4ub(255, 0, 0, 0); //infront of walls
+        else if (allallies)
+            glColor4ub(0, 255, 0, 0); //infront of  walls
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_DEPTH_TEST);
+        glPopMatrix();
+    }
 
-		}
-	}
-
-	//wallhack
-	if ((wallhack == 1) && (allaxis || allallies))
-	{
-		glDisable(GL_DEPTH_TEST);
-		origglDrawElements(mode, count, type, indices);
-		glEnable(GL_DEPTH_TEST);
-	}
-
-	//chams, normal
-	if ((chams == 1) && (allaxis || allallies))
-	{
-		glPushMatrix();
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_TEXTURE_2D);
-		glEnable(GL_COLOR_MATERIAL);
-		glDisableClientState(GL_COLOR_ARRAY);
-		if (allaxis)
-			glColor4ub(255, 80, 0, 0); //behind walls
-		else if (allallies)
-			glColor4ub(0, 255, 125, 0); //behind walls
-		origglDrawElements(mode, count, type, indices);
-		glEnable(GL_COLOR_MATERIAL);
-		glDisableClientState(GL_COLOR_ARRAY);
-		if (allaxis)
-			glColor4ub(255, 0, 0, 0); //infront of walls
-		else if (allallies)
-			glColor4ub(0, 255, 0, 0); //infront of  walls
-		glEnable(GL_TEXTURE_2D);
-		glEnable(GL_DEPTH_TEST);
-		glPopMatrix();
-	}
-	
-	(*origglDrawElements)(mode, count, type, indices);
+    (*origglDrawElements)(mode, count, type, indices);
 }
 
-// =============================================================================================== //
-
-void APIENTRY newglVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-	//used for walls check, not used anymore for dead body check
-	if (pointer != NULL)
-	{
 		vpointer = (GLfloat *)pointer;
 
 		GLfloat *x = (GLfloat *)vpointer + 0;
